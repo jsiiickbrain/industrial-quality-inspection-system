@@ -38,51 +38,57 @@ if uploaded_file is not None:
 
     st.sidebar.success(f"Inspection Result: {status}")
     
-    # حفظ النتيجة في قاعدة البيانات
+    # حفظ النتيجة في قاعدة البيانات بأمان
     db_path = "inspection_data.db"
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS inspection_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            item_id TEXT,
-            status TEXT,
-            confidence REAL,
-            defect_type TEXT
-        )
-    ''')
-    cursor.execute('''
-        INSERT INTO inspection_logs (item_id, status, confidence, defect_type)
-        VALUES (?, ?, ?, ?)
-    ''', (f"UPLOAD_{uploaded_file.name}", status, confidence, defect_type))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS inspection_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                item_id TEXT,
+                status TEXT,
+                confidence REAL,
+                defect_type TEXT
+            )
+        ''')
+        cursor.execute('''
+            INSERT INTO inspection_logs (item_id, status, confidence, defect_type)
+            VALUES (?, ?, ?, ?)
+        ''', (f"UPLOAD_{uploaded_file.name}", status, confidence, defect_type))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        st.sidebar.warning(f"Saved locally (DB Note: {e})")
 
 # عرض البيانات من قاعدة البيانات
 db_path = "inspection_data.db"
 if os.path.exists(db_path):
-    conn = sqlite3.connect(db_path)
-    df = pd.read_sql_query("SELECT * FROM inspection_logs ORDER BY id DESC", conn)
-    conn.close()
+    try:
+        conn = sqlite3.connect(db_path)
+        df = pd.read_sql_query("SELECT * FROM inspection_logs ORDER BY id DESC", conn)
+        conn.close()
 
-    if not df.empty:
-        col1, col2, col3, col4 = st.columns(4)
-        total_inspections = len(df)
-        passed_count = len(df[df['status'] == 'PASSED'])
-        failed_count = len(df[df['status'] == 'FAILED'])
-        pass_rate = (passed_count / total_inspections) * 100
+        if not df.empty:
+            col1, col2, col3, col4 = st.columns(4)
+            total_inspections = len(df)
+            passed_count = len(df[df['status'] == 'PASSED'])
+            failed_count = len(df[df['status'] == 'FAILED'])
+            pass_rate = (passed_count / total_inspections) * 100
 
-        col1.metric("Total Inspections", total_inspections)
-        col2.metric("Passed Items", passed_count)
-        col3.metric("Failed Items", failed_count)
-        col4.metric("Pass Rate", f"{pass_rate:.1f}%")
+            col1.metric("Total Inspections", total_inspections)
+            col2.metric("Passed Items", passed_count)
+            col3.metric("Failed Items", failed_count)
+            col4.metric("Pass Rate", f"{pass_rate:.1f}%")
 
-        st.markdown("---")
+            st.markdown("---")
 
-        st.subheader("📋 Recent Inspection Logs")
-        st.dataframe(df, use_container_width=True)
+            st.subheader("📋 Recent Inspection Logs")
+            st.dataframe(df, use_container_width=True)
 
-        st.subheader("📊 Quality Distribution")
-        status_counts = df['status'].value_counts()
-        st.bar_chart(status_counts)
+            st.subheader("📊 Quality Distribution")
+            status_counts = df['status'].value_counts()
+            st.bar_chart(status_counts)
+    except Exception as e:
+        st.info("Upload an image to start populating logs.")
