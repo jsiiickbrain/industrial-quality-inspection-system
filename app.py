@@ -38,7 +38,7 @@ if uploaded_file is not None:
 
     st.sidebar.success(f"Inspection Result: {status}")
     
-    # حفظ النتيجة في قاعدة البيانات بأمان
+    # حفظ النتيجة في قاعدة البيانات مع إصلاح التاريخ
     db_path = "inspection_data.db"
     try:
         conn = sqlite3.connect(db_path)
@@ -54,13 +54,13 @@ if uploaded_file is not None:
             )
         ''')
         cursor.execute('''
-            INSERT INTO inspection_logs (item_id, status, confidence, defect_type)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO inspection_logs (timestamp, item_id, status, confidence, defect_type)
+            VALUES (datetime('now'), ?, ?, ?, ?)
         ''', (f"UPLOAD_{uploaded_file.name}", status, confidence, defect_type))
         conn.commit()
         conn.close()
     except Exception as e:
-        st.sidebar.warning(f"Saved locally (DB Note: {e})")
+        st.sidebar.warning(f"Note: {e}")
 
 # عرض البيانات من قاعدة البيانات
 db_path = "inspection_data.db"
