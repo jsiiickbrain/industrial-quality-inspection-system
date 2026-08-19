@@ -21,7 +21,7 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file)
     
     # عرض الصورة المرفوعة في القائمة الجانبية
-    st.sidebar.image(image, caption="Uploaded Image", use_column_width=True)
+    st.sidebar.image(image, caption="Uploaded Image", use_container_width=True)
     
     img_array = np.array(image)
     
