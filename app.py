@@ -2,7 +2,6 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import os
-import cv2
 import numpy as np
 from PIL import Image
 from ultralytics import YOLO
@@ -18,8 +17,12 @@ st.sidebar.header("🔍 Image Testing")
 uploaded_file = st.sidebar.file_uploader("Upload an item image for inspection...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # قراءة الصورة وتحويلها
+    # قراءة الصورة
     image = Image.open(uploaded_file)
+    
+    # عرض الصورة المرفوعة في القائمة الجانبية
+    st.sidebar.image(image, caption="Uploaded Image", use_column_width=True)
+    
     img_array = np.array(image)
     
     # تحميل نموذج الذكاء الاصطناعي للفحص
